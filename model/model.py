@@ -9,10 +9,10 @@ from model.decoder import Decoder
 
 
 class NeuroSeg(nn.Module):
-    def __init__(self, num_classes=1):
+    def __init__(self, num_classes=1, encoder_pretrained=False):
         super().__init__()
 
-        self.encoder = ResNetEncoder()
+        self.encoder = ResNetEncoder(pretrained=encoder_pretrained)
 
         self.aspp = ASPP(in_channels=2048, out_channels=256)
         self.attention = CBAM(channels=256)
