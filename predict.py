@@ -11,11 +11,11 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Load model
 model = NeuroSeg().to(device)
-model.load_state_dict(torch.load("neuroseg.pth", map_location=device))
+model.load_state_dict(torch.load("checkpoints/neuroseg_best.pth", map_location=device))
 model.eval()
 
 # Load image
-img_path = "data/images/image_001.png"
+img_path = "data/images/TCGA_CS_4941_19960909_10.tif"  # Ensure this file exists, or use a sample
 image = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
 image = cv2.resize(image, (256, 256))
 image_norm = image / 255.0
