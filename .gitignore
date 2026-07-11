@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.pyc
+
+# Virtual environments
+venv/
+env/
+.env/
+.venv/
+
+# Dataset (large — download via Kaggle)
+data/
+kaggle_data/
+
+# Model checkpoints (large binary files)
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+*.h5
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Kaggle API credentials
+kaggle.json
+
+# Logs
+*.log
+*.txt
