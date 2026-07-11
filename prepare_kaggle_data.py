@@ -41,7 +41,7 @@ def prepare_lgg_dataset(kaggle_dir_path):
                 shutil.copy2(file_path, img_out_dir / file)
                 copied_images += 1
 
-    print("✅ Data preparation complete!")
+    print("[DONE] Data preparation complete!")
     print(f"Copied {copied_images} images to {img_out_dir}")
     print(f"Copied {copied_masks} masks to {mask_out_dir}")
     print("You can now run `venv\\Scripts\\python.exe train.py --image-dir data/images --mask-dir data/masks`")
