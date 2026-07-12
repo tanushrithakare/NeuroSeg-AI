@@ -4,13 +4,26 @@ from pathlib import Path
 import cv2
 import torch
 from torch.utils.data import Dataset
+import albumentations as A
 
 
 class BrainMRIDataset(Dataset):
-    def __init__(self, image_dir, mask_dir, image_size=256):
+    def __init__(self, image_dir, mask_dir, image_size=256, augment=False):
         self.image_dir = Path(image_dir)
         self.mask_dir = Path(mask_dir)
         self.image_size = image_size
+        self.augment = augment
+
+        if self.augment:
+            self.transform = A.Compose([
+                A.HorizontalFlip(p=0.5),
+                A.VerticalFlip(p=0.5),
+                A.RandomRotate90(p=0.5),
+                A.ShiftScaleRotate(shift_limit=0.0625, scale_limit=0.1, rotate_limit=15, p=0.5),
+                A.RandomBrightnessContrast(p=0.2),
+            ])
+        else:
+            self.transform = None
 
         if not self.image_dir.exists() or not self.mask_dir.exists():
             raise FileNotFoundError("Image directory or mask directory does not exist.")
@@ -51,6 +64,11 @@ class BrainMRIDataset(Dataset):
 
         image = cv2.resize(image, (self.image_size, self.image_size), interpolation=cv2.INTER_AREA)
         mask = cv2.resize(mask, (self.image_size, self.image_size), interpolation=cv2.INTER_NEAREST)
+
+        if self.transform:
+            augmented = self.transform(image=image, mask=mask)
+            image = augmented['image']
+            mask = augmented['mask']
 
         image = torch.tensor(image / 255.0, dtype=torch.float32).unsqueeze(0)
         mask = torch.tensor((mask > 127).astype("float32"), dtype=torch.float32).unsqueeze(0)

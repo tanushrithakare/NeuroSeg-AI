@@ -258,15 +258,28 @@ html, body, [class*="css"] {
 }
 
 /* ── Chat ── */
+[data-testid="stBottom"] {
+    background: transparent !important;
+}
 [data-testid="stChatMessage"] {
     background: rgba(15,23,42,0.7) !important;
     border: 1px solid rgba(99,102,241,0.15) !important;
-    border-radius: 14px !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+[data-testid="stChatInput"] {
+    max-width: 800px !important;
+    margin: 0 auto !important;
+    padding-bottom: 24px !important;
 }
 [data-testid="stChatInput"] > div {
-    background: rgba(15,23,42,0.8) !important;
-    border: 1px solid rgba(99,102,241,0.25) !important;
-    border-radius: 12px !important;
+    background: rgba(15,23,42,0.95) !important;
+    border: 1px solid rgba(99,102,241,0.4) !important;
+    border-radius: 24px !important;
+    padding: 2px 16px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* ── Divider ── */
@@ -346,7 +359,7 @@ st.markdown("""
 def load_model():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = NeuroSeg().to(device)
-    model.load_state_dict(torch.load("checkpoints/neuroseg_best.pth", map_location=device))
+    model.load_state_dict(torch.load("checkpoints/neuroseg_best.pth", map_location=device, weights_only=True))
     model.eval()
     return model, device
 
@@ -357,7 +370,8 @@ with st.spinner("Loading model checkpoint..."):
     try:
         model, device = load_model()
         model_ready = True
-    except Exception:
+    except Exception as e:
+        print(f"[NeuroSeg] Could not load model checkpoint: {e}")
         model_ready = False
 
 device_label = ("GPU (CUDA)" if device == "cuda" else "CPU") if model_ready else "—"
@@ -425,10 +439,21 @@ if uploaded_file is not None:
             image_norm = image_resized / 255.0
             input_tensor = torch.tensor(image_norm, dtype=torch.float32).unsqueeze(0).unsqueeze(0).to(device)
 
-            # Inference
+            # Inference with Test-Time Augmentation (TTA)
             with torch.no_grad():
-                output = model(input_tensor)
-                pred = torch.sigmoid(output).cpu().numpy()[0, 0]
+                # 1. Original
+                p1 = torch.sigmoid(model(input_tensor))
+                
+                # 2. Horizontal Flip
+                input_hf = torch.flip(input_tensor, dims=[3])
+                p2 = torch.flip(torch.sigmoid(model(input_hf)), dims=[3])
+                
+                # 3. Vertical Flip
+                input_vf = torch.flip(input_tensor, dims=[2])
+                p3 = torch.flip(torch.sigmoid(model(input_vf)), dims=[2])
+                
+                # Average consensus
+                pred = ((p1 + p2 + p3) / 3.0).cpu().numpy()[0, 0]
 
             # Mask
             mask = (pred > threshold).astype(np.uint8)

@@ -1,10 +1,11 @@
 import argparse
+import random
 from pathlib import Path
 
 import torch
 from torch import nn
 from torch.optim import AdamW
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 
 from dataset import BrainMRIDataset
 from model.model import NeuroSeg
@@ -32,17 +33,27 @@ def train(args):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
 
-    dataset = BrainMRIDataset(args.image_dir, args.mask_dir, image_size=args.image_size)
-    val_size = int(len(dataset) * args.val_ratio)
-    train_size = len(dataset) - val_size
-    train_set, val_set = random_split(
-        dataset,
-        [train_size, val_size],
-        generator=torch.Generator().manual_seed(42),
-    )
+    full_dataset = BrainMRIDataset(args.image_dir, args.mask_dir, image_size=args.image_size, augment=False)
+    pairs = full_dataset.pairs
+    
+    random.seed(42)
+    shuffled_pairs = pairs.copy()
+    random.shuffle(shuffled_pairs)
+    
+    val_size = int(len(shuffled_pairs) * args.val_ratio)
+    train_size = len(shuffled_pairs) - val_size
+    
+    train_pairs = shuffled_pairs[:train_size]
+    val_pairs = shuffled_pairs[train_size:]
+    
+    train_dataset = BrainMRIDataset(args.image_dir, args.mask_dir, image_size=args.image_size, augment=True)
+    train_dataset.pairs = train_pairs
+    
+    val_dataset = BrainMRIDataset(args.image_dir, args.mask_dir, image_size=args.image_size, augment=False)
+    val_dataset.pairs = val_pairs
 
-    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
-    val_loader = DataLoader(val_set, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
 
     model = NeuroSeg(encoder_pretrained=args.encoder_pretrained).to(device)
     bce = nn.BCEWithLogitsLoss()

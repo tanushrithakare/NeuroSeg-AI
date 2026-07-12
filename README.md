@@ -245,6 +245,7 @@ data/
 | `streamlit` | Web dashboard |
 | `numpy` | Array operations |
 | `Pillow` | Image handling in Streamlit |
+| `albumentations` | Data augmentation during training |
 
 ---
 

@@ -44,7 +44,7 @@ def prepare_lgg_dataset(kaggle_dir_path):
     print("[DONE] Data preparation complete!")
     print(f"Copied {copied_images} images to {img_out_dir}")
     print(f"Copied {copied_masks} masks to {mask_out_dir}")
-    print("You can now run `venv\\Scripts\\python.exe train.py --image-dir data/images --mask-dir data/masks`")
+    print("You can now run: python train.py --image-dir data/images --mask-dir data/masks")
 
 if __name__ == "__main__":
     import argparse
