@@ -1,4 +1,4 @@
-# 🧠 NeuroSeg-AI
+# 🧠 NeuroSeg
 
 > **Attention-based deep learning system for semantic segmentation of brain tumors from MRI scans.**
 
